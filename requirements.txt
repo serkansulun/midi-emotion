@@ -1,0 +1,6 @@
+numpy==1.21.0
+pandas==1.2.5
+pretty-midi==0.2.9
+pypianoroll==1.0.4
+torch==1.10.0
+tqdm==4.61.1
