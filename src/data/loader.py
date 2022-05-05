@@ -1,7 +1,6 @@
 import numpy as np
 import random
 import torch
-import pandas as pd
 from data.data_processing import transpose, tensor_to_ind_tensor
 from data.data_processing_reverse import tuples_to_str
 import sys

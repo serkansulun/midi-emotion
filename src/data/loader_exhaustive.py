@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-import pandas as pd
 from tqdm import tqdm
 from data.data_processing import  tensor_to_ind_tensor
 import sys
