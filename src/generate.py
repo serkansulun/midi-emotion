@@ -10,7 +10,7 @@ from utils import get_n_instruments
 from models.build_model import build_model
 from data.data_processing_reverse import ind_tensor_to_mid, ind_tensor_to_str
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""

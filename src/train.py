@@ -18,7 +18,7 @@ from data.collate import filter_collate
 from utils import CsvWriter, create_exp_dir, accuracy
 from config import args
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 # Set the random seed manually for reproducibility.
 if args.seed > 0:
