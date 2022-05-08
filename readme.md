@@ -5,8 +5,7 @@ https://ieeexplore.ieee.org/document/9762257
 To cite:
 ```S. Sulun, M. E. P. Davies and P. Viana, "Symbolic music generation conditioned on continuous-valued emotions," in IEEE Access, doi: 10.1109/ACCESS.2022.3169744.```
 
-Required Python libraries: Numpy, Pytorch, Pandas, pretty_midi, Pypianoroll, tqdm
-Or run: ```pip install -r requirements.txt```
+Required Python libraries: Numpy, Pytorch, Pandas, pretty_midi, Pypianoroll, tqdm, Spotipy, Pytables. Or run: ```pip install -r requirements.txt```
 
 To create the Lakh-Spotify dataset:
 
