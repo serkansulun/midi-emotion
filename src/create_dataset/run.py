@@ -17,7 +17,7 @@ def run_parallel(func, my_iter):
     return results
 
 write = False
-redo = True
+redo = False
 
 main_output_dir = "../../data_files/features"
 os.makedirs(main_output_dir, exist_ok=True)
@@ -387,7 +387,9 @@ if not os.path.exists(output_path) or redo:
         else:
             is_matched = True
             spotify_audio_features = matched_features["spotify_audio_features"]
-            if spotify_audio_features is None:
+            if spotify_audio_features is None or spotify_audio_features["valence"] == 0.0:
+                # An unusual number of samples have a valence of 0.0
+                # which is possibly due to an error. Feel free to comment out.
                 valence = float("nan")
             else:
                 valence = spotify_audio_features["valence"]
