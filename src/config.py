@@ -111,6 +111,8 @@ parser.add_argument("--always_use_discrete_condition", action="store_true",
                 help="Discrete tokens are used for every sequence")
 parser.add_argument("--regression_dir", type=str, default=None,
                     help="The path of folder with generations, to perform regression on")
+parser.add_argument("--attn_type", type=str, default="full", choices=["full", "causal-linear"],
+                    help="Attention type")
 
 args = parser.parse_args()
 

@@ -21,23 +21,28 @@ def build_model(args, load_config_dict=None):
         "d_condition": args["d_condition"],
         "max_seq": 2048,
         "pad_token": 0,
+        "attn_type": args["attn_type"]
     }
 
     if not "regression" in list(args.keys()):
         args["regression"] = False
 
-    if args["regression"]:
-        config["output_size"] = 2
-        from models.music_regression \
-                import MusicRegression as MusicTransformer
+    if args["attn_type"] == "full":
+        if args["regression"]:
+            config["output_size"] = 2
+            from models.music_regression \
+                    import MusicRegression as MusicTransformer
 
-    elif args["conditioning"] == "continuous_token":
-        from models.music_continuous_token \
-                import MusicTransformerContinuousToken as MusicTransformer
-        del config["d_condition"]
+        elif args["conditioning"] == "continuous_token":
+            from models.music_continuous_token \
+                    import MusicTransformerContinuousToken as MusicTransformer
+            del config["d_condition"]
+        else:
+            from models.music_multi \
+                    import MusicTransformerMulti as MusicTransformer
     else:
-        from models.music_multi \
-                import MusicTransformerMulti as MusicTransformer
+        from models.fast \
+                    import Fast as MusicTransformer
 
     model = MusicTransformer(**config)
     if load_config_dict is not None and args is not None:
