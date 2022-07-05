@@ -15,7 +15,7 @@ from data.loader import Loader
 from data.loader_exhaustive import LoaderExhaustive
 from data.loader_generations import LoaderGenerations
 from data.collate import filter_collate
-from utils import CsvWriter, create_exp_dir, accuracy
+from utils import CsvWriter, create_exp_dir, accuracy, memory
 from config import args
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -368,9 +368,10 @@ class Runner:
                             step=str(self.train_step), primers=primers,
                             temperatures=[args.temp_note, args.temp_rest])
                         
-                if (self.train_step % args.log_step == 0):
+                if (self.train_step % args.log_step == 0) and self.train_step > 0:
                     # Print log
                     if n_elements_total > 0:
+                        print(memory())
                         cur_loss = train_loss / n_elements_total
                         elapsed_total = time.time() - self.init_time
                         elapsed_interval = time.time() - train_interval_start
@@ -378,9 +379,10 @@ class Runner:
                         hours_total = self.init_hours + hours_elapsed
                         lr = self.optimizer.param_groups[0]['lr']
                         log_str = '| Epoch {:3d} step {:>8d} | {:>6d} sequences  | {:>3.1f} h | lr {:.2e} ' \
-                                '| ms/batch {:4.0f} | loss {:7.4f}'.format(
+                                '| ms/batch {:4.0f} | ms/sample {:4.0f} | loss {:7.4f}'.format(
                             self.epoch, self.train_step, self.n_sequences_total, hours_total, lr,
-                            elapsed_interval * 1000 / args.log_step, cur_loss)
+                            elapsed_interval * 1000 / args.log_step,
+                            elapsed_interval * 1000 / args.log_step / args.batch_size, cur_loss)
                         self.logging(log_str)
                         self.csv_writer.update({"epoch": self.epoch, "step": self.train_step, "hour": hours_total,
                                                 "lr": lr, "trn_loss": cur_loss, "val_loss": np.nan,
@@ -402,7 +404,7 @@ class Runner:
                                         "sample": self.n_sequences_total}, 
                                         os.path.join(args.work_dir, 'stats.pt'))
                     
-                if (self.train_step % args.eval_step == 0):
+                if (self.train_step % args.eval_step == 0) and self.train_step > 0:
                     # Evaluate model
                     val_loss, val_acc = self.evaluate()
                     elapsed_total = time.time() - self.init_time
