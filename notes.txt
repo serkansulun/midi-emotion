@@ -1,4 +1,4 @@
-python train.py --debug --log_step 100 --n_layer 8 --max_step 300 --no_amp
+python train.py --debug --log_step 100 --n_layer 8 --max_step 300 --no_amp --attn_type causal-linear
 
 8 layers
 
@@ -12,7 +12,16 @@ ms/batch  715 | ms/sample  179, max_cached: 6964, nvsmi: 7814
 PASCAL
 AMP
 ms/batch 1136 | ms/sample  284, max_cached: 9334, nvsmi: 10301
+
 NO AMP
+FULL ATTENTION (default)
 ms/batch 1115 | ms/sample  279, max_cached: 9498, nvsmi: 10465
+CAUSAL-LINEAR ATTENTION ***
+ms/batch  555 | ms/sample  139, max_cached: 3918, nvsmi: 4887 ***
+REFORMER ATTENTION
+ms/batch  908 | ms/sample  227, max_cached: 8016, nvsmi: 8985
+LOCAL ATTENTION (256)
+ms/batch  641 | ms/sample  160, max_cached: 5356, nvsmi: 6325
 
-
+n_params for fast:    58059503
+n_params for default: 58844399

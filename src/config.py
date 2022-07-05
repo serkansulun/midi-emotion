@@ -111,8 +111,10 @@ parser.add_argument("--always_use_discrete_condition", action="store_true",
                 help="Discrete tokens are used for every sequence")
 parser.add_argument("--regression_dir", type=str, default=None,
                     help="The path of folder with generations, to perform regression on")
-parser.add_argument("--attn_type", type=str, default="full", choices=["full", "causal-linear"],
+parser.add_argument("--attn_type", type=str, default="full",
                     help="Attention type")
+parser.add_argument("--fast_transformers", action="store_true",
+                    help="Use the fast-transformers library")
 
 args = parser.parse_args()
 
@@ -123,6 +125,8 @@ if args.conditioning != "continuous_concat":
     args.d_condition = -1
 
 assert not (args.exhaustive_eval and args.max_eval_step > 0)
+
+assert (args.attn_type is "full") or args.no_amp, "Linear attention doesn't work with AMP"
 
 if args.full_dataset:
     assert args.conditioning in ["discrete_token", "none"] and not args.regression, "LPD-full has NaN features"

@@ -57,7 +57,7 @@ class Fast(torch.nn.Module):
         # self.encoder = torch.nn.ModuleList(
         #     [EncoderLayer(embedding_dim, d_inner, dropout, h=num_head, additional=False, max_seq=max_seq)
         #      for _ in range(num_layer)])
-        print(attn_type)
+        # print(attn_type)
         self.encoder = TransformerEncoderBuilder.from_kwargs(
                 n_layers=num_layer,
                 n_heads=num_head,
@@ -67,6 +67,7 @@ class Fast(torch.nn.Module):
                 activation='gelu',
                 dropout=dropout,
                 attention_type=attn_type,
+                local_context=256
             ).get()
 
         self.dropout = torch.nn.Dropout(dropout)

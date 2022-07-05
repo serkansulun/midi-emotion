@@ -27,7 +27,7 @@ def build_model(args, load_config_dict=None):
     if not "regression" in list(args.keys()):
         args["regression"] = False
 
-    if args["attn_type"] == "full":
+    if not args["fast_transformers"]:
         if args["regression"]:
             config["output_size"] = 2
             from models.music_regression \
