@@ -1,0 +1,10 @@
+python train.py --debug --log_step 100 --n_layer 8 --no_amp
+
+8 layers
+
+CLUSTER - RTX 6000
+AMP
+ms/batch  483 | ms/sample  121, max_cached: 7698, nvsmi: 8548
+NO AMP
+ms/batch  715 | ms/sample  179, max_cached: 6964, nvsmi: 7814
+
