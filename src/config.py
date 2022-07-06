@@ -126,7 +126,7 @@ if args.conditioning != "continuous_concat":
 
 assert not (args.exhaustive_eval and args.max_eval_step > 0)
 
-assert (args.attn_type is "full") or args.no_amp, "Linear attention doesn't work with AMP"
+assert (args.attn_type == "full") or args.no_amp, "Linear attention doesn't work with AMP"
 
 if args.full_dataset:
     assert args.conditioning in ["discrete_token", "none"] and not args.regression, "LPD-full has NaN features"
