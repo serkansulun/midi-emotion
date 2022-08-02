@@ -1,3 +1,5 @@
+Generates multi-instrument symbolic music (MIDI), based on user-provided emotions from valence-arousal plane. In simpler words, it can generate happy (positive valence, positive arousal), calm (positive valence, negative arousal), angry (negative valence, positive arousal) or sad (negative valence, negative arousal) music.
+
 Source code for our paper "Symbolic music generation conditioned on continuous-valued emotions", 
 Serkan Sulun, Matthew E. P. Davies, Paula Viana, 2022. 
 https://ieeexplore.ieee.org/document/9762257
