@@ -262,8 +262,12 @@ class Runner:
                     n_elements_total += n_elements
                     n_sequences_total += n_sequences
 
-            avg_loss = total_loss / n_elements_total
-            avg_accs = {k: v/n_elements_total for k, v in total_accs.items()}
+            if n_elements_total == 0:
+                avg_loss = float('nan')
+                avg_accs = float('nan')
+            else:
+                avg_loss = total_loss / n_elements_total
+                avg_accs = {k: v/n_elements_total for k, v in total_accs.items()}
             if args.exhaustive_eval:
                 print(f"Total number of sequences: {n_sequences_total}")
 

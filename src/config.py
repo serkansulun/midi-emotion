@@ -20,7 +20,7 @@ parser.add_argument('--d_condition', type=int, default=192,
                     help='condition dimension (if continuous_concat is used)')
 parser.add_argument('--d_inner', type=int, default=768*4,
                     help='inner dimension in FF')
-parser.add_argument('--tgt_len', type=int, default=1216, #1216, #1152
+parser.add_argument('--tgt_len', type=int, default=1216, 
                     help='number of tokens to predict')
 parser.add_argument('--max_gen_input_len', type=int, default=-1,
                     help='number of tokens to predict')
