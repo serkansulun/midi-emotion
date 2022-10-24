@@ -22,7 +22,7 @@ MSD summary file
 http://labrosa.ee.columbia.edu/millionsong/sites/default/files/AdditionalFiles/msd_summary_file.h5
 
 Echonest mapping dataset
-ftp://ftp.acousticbrainz.org/pub/acousticbrainz/acousticbrainz-labs/download/msdrosetta/millionsongdataset_echonest.tar.bz2
+```ftp://ftp.acousticbrainz.org/pub/acousticbrainz/acousticbrainz-labs/download/msdrosetta/millionsongdataset_echonest.tar.bz2```
 Alternatively: https://drive.google.com/file/d/1zlSR_EAa4X6muAsUmoyLbRWTzPo-fmi6/view?usp=sharing
 
 Lakh-MSD matching scores file
