@@ -23,6 +23,7 @@ MSD summary file
 
 Echonest mapping dataset
 ```ftp://ftp.acousticbrainz.org/pub/acousticbrainz/acousticbrainz-labs/download/msdrosetta/millionsongdataset_echonest.tar.bz2```
+Alternatively: ```https://drive.google.com/file/d/1zlSR_EAa4X6muAsUmoyLbRWTzPo-fmi6/view?usp=sharing```
 
 Lakh-MSD matching scores file
 ```http://hog.ee.columbia.edu/craffel/lmd/match_scores.json```
