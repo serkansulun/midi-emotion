@@ -16,22 +16,22 @@ To create the Lakh-Spotify dataset:
 - Download the datasets:
 
 Lakh pianoroll 5 full dataset
-```https://drive.google.com/uc?id=19FJwmNxWUmR3UutCDhZtbKVnEBVHU-2q```
+https://drive.google.com/uc?id=19FJwmNxWUmR3UutCDhZtbKVnEBVHU-2q
 
 MSD summary file
-```http://labrosa.ee.columbia.edu/millionsong/sites/default/files/AdditionalFiles/msd_summary_file.h5```
+http://labrosa.ee.columbia.edu/millionsong/sites/default/files/AdditionalFiles/msd_summary_file.h5
 
 Echonest mapping dataset
-```ftp://ftp.acousticbrainz.org/pub/acousticbrainz/acousticbrainz-labs/download/msdrosetta/millionsongdataset_echonest.tar.bz2```
-Alternatively: ```https://drive.google.com/file/d/1zlSR_EAa4X6muAsUmoyLbRWTzPo-fmi6/view?usp=sharing```
+ftp://ftp.acousticbrainz.org/pub/acousticbrainz/acousticbrainz-labs/download/msdrosetta/millionsongdataset_echonest.tar.bz2
+Alternatively: https://drive.google.com/file/d/1zlSR_EAa4X6muAsUmoyLbRWTzPo-fmi6/view?usp=sharing
 
 Lakh-MSD matching scores file
-```http://hog.ee.columbia.edu/craffel/lmd/match_scores.json```
+http://hog.ee.columbia.edu/craffel/lmd/match_scores.json
 
 - Extract when necessary, and place all inside folder ```./data_files```
 
 - Get Spotify client ID and client secret:
-```https://developer.spotify.com/dashboard/applications```
+https://developer.spotify.com/dashboard/applications
 Then, fill in the variables "client_id" and "client_secret" in ```src/create_dataset/utils.py```
 
 - Run ```run.py```. 
@@ -40,7 +40,7 @@ Then, fill in the variables "client_id" and "client_secret" in ```src/create_dat
 To generate MIDI using pretrained models:
 
 - Download model(s) from the following link:
-```https://drive.google.com/drive/folders/1qFgomRDXmx8ewRz_E0X2T10CY-w_kUFt?usp=sharing```
+https://drive.google.com/drive/folders/1qFgomRDXmx8ewRz_E0X2T10CY-w_kUFt?usp=sharing
 
 - Extract into the folder ```output```
 
