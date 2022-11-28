@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import datetime
-from utils import get_n_instruments
+from utils import get_n_instruments, memory
 from models.build_model import build_model
 from data.data_processing_reverse import ind_tensor_to_mid, ind_tensor_to_str
 
@@ -19,8 +19,8 @@ def chunks(lst, n):
 
 def generate(model, maps, device, out_dir, conditioning, short_filename=False,
                 penalty_coeff=0.5, discrete_conditions=None, continuous_conditions=None,
-                    max_input_len=1024, amp=True, step=None, 
-                    gen_len=2048, temperatures=[1.2,1.2], top_k=-1, 
+                    max_input_len=1216, amp=True, step=None, 
+                    gen_len=4096, temperatures=[1.2,1.2], top_k=-1, 
                     top_p=0.7, debug=False, varying_condition=None, seed=-1,
                     verbose=False, primers=[["<START>"]], min_n_instruments=2):
 
@@ -101,6 +101,9 @@ def generate(model, maps, device, out_dir, conditioning, short_filename=False,
             input_ = gen_song_tensor
             if len(gen_song_tensor) > max_input_len:
                 input_ = input_[-max_input_len:, :]
+                
+            if len(gen_song_tensor) == max_input_len:
+                print(memory())
 
             if conditioning == "discrete_token":
                 # concat with conditions

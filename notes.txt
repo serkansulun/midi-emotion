@@ -31,3 +31,6 @@ ms/batch  641 | ms/sample  160, max_cached: 5356, nvsmi: 6325
 
 n_params for fast:    58059503
 n_params for default: 58844399
+
+Generation time: 4096 tokens. 252 seconds
+0 arousal: 56 seconds

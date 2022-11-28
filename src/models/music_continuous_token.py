@@ -32,7 +32,7 @@ def generate_mask(x, pad_token=None, batch_first=True):
 class MusicTransformerContinuousToken(torch.nn.Module):
     def __init__(self, embedding_dim=None, d_inner=None, vocab_size=None, num_layer=None, num_head=None,
                  max_seq=None, dropout=None, pad_token=None, has_start_token=True, n_conditions=2,
-                 ):
+                 attn_type=None):
         super().__init__()
 
         self.max_seq = max_seq

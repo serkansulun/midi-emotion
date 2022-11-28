@@ -10,6 +10,11 @@ def build_model(args, load_config_dict=None):
 
     if load_config_dict is not None:
         args = load_config_dict
+
+    if "attn_type" not in args.keys():
+        args["attn_type"] = "standard"
+    if "fast_transformers" not in args.keys():
+        args["fast_transformers"] = False
         
     config = {
         "vocab_size": args["vocab_size"], 
