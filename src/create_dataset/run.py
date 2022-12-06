@@ -9,6 +9,22 @@ import collections
 import utils
 from glob import glob
 import pandas as pd
+import csv
+from copy import deepcopy
+
+"""
+Written by Serkan Sulun
+
+Creates labels for Lakh MIDI (or pianoroll) dataset.
+Labels include low-level MIDI features such as tempo, note density and number of MIDI files.
+They also include high-level features obtained from Spotify Developer API, such as valence, energy, etc.
+
+See utils.py and fill in the variables client_id and client_secret.
+
+When the user quota is exceeded, Spotify blocks access and the script gets stuck.
+In that case, you may need to re-run the script some time later,
+or use a different account with different client ID and secret.
+"""
 
 def run_parallel(func, my_iter):
     # Parallel processing visualized with tqdm
@@ -16,7 +32,7 @@ def run_parallel(func, my_iter):
         results = list(tqdm(executor.map(func, my_iter), total=len(my_iter)))
     return results
 
-write = False
+write = True
 redo = False
 
 main_output_dir = "../../data_files/features"
@@ -28,7 +44,7 @@ echonest_folder_path = "../../data_files/millionsongdataset_echonest"
 
 use_pianoroll_dataset = True
 if use_pianoroll_dataset:
-    midi_dataset_path = "../../data_files/lpd_5/lpd_5_full"
+    midi_dataset_path = "../../data_files/lpd_full/lpd/lpd_full"
     extension = ".npz"
     output_dir = os.path.join(main_output_dir, "pianoroll")
 else:
@@ -97,14 +113,37 @@ else:
 
 ### 3- Merge and add Spotify features
 output_path = os.path.join(output_dir, "trackid_to_spotify_features.json")
+# When user quota is exceeded, Spotify blocks access and the script gets stuck.
+# In that case, you may need to re-run the script some time later,
+# or use a different account with different client ID and secret.
+# So we keep an incomplete csv file, so that we can continue later from where we left.
+output_path_incomplete = os.path.join(output_dir, "incomplete_trackid_to_spotify_features.csv")
+
 if os.path.exists(output_path) and not redo:
     with open(output_path, "r") as f:
         trackid_to_spotify_features = json.load(f)
 else:
-    print("Adding Spotify features")
-    trackid_to_spotify_features = {}
-    for track_id, data in tqdm(trackid_to_songid.items()):
-        try:
+    fieldnames = ["track_id", "song_id", "title", "artist", "release",
+        "spotify_id", "spotify_title", "spotify_artist", "spotify_album", "spotify_audio_features"]
+
+    data_to_process = deepcopy(trackid_to_songid)
+    write_header = True
+
+    if os.path.exists(output_path_incomplete):
+        # Continue from where we've left
+        data_already_processed = utils.read_csv(output_path_incomplete)
+        track_ids_already_processed = [entry["track_id"] for entry in data_already_processed]
+        data_to_process = {key: value for key, value in data_to_process.items() if key not in track_ids_already_processed}
+        write_header = False
+
+    with open(output_path_incomplete, "a") as f_out:
+        csv_writer = csv.DictWriter(f_out, fieldnames=fieldnames)
+        if write_header:
+            csv_writer.writeheader()
+
+        print("Adding Spotify features")
+        for track_id, data in tqdm(data_to_process.items()):
+            data["track_id"] = track_id
             album = data["release"]
             spotify_ids = songid_to_spotify[data["song_id"]]
             if spotify_ids == []:
@@ -112,7 +151,10 @@ else:
                 best_spotify_track = utils.search_spotify_flexible(data["title"], data["artist"], data["release"])
             else:
                 spotify_tracks = utils.get_spotify_tracks(spotify_ids)
-                if len(spotify_tracks) > 1:
+                if spotify_tracks == None:
+                    for key in ["id", "title", "artist", "album", "audio_features"]:
+                        data["spotify_" + key] = None
+                elif len(spotify_tracks) > 1:
                     # find best spotify id by comparing album names
                     best_match_score = 0
                     best_match_ind = 0
@@ -146,13 +188,26 @@ else:
             else:
                 for key in ["id", "title", "artist", "album", "audio_features"]:
                     data["spotify_" + key] = None
+            
+            csv_writer.writerow(data)
 
-            trackid_to_spotify_features[track_id] = data
-        except:
-            print(f"Problematic track: {track_id}")
-    if write:
+    # Now write final data to json
+    trackid_to_spotify_features_list = utils.read_csv(output_path_incomplete)
+    trackid_to_spotify_features = {}
+    # unlike json, csv doesnt support dict within dict, so convert it to dict manually
+    for item in trackid_to_spotify_features_list:
+        spotify_audio_features = item["spotify_audio_features"]
+        if spotify_audio_features != "":
+            spotify_audio_features = eval(spotify_audio_features)
+        item["spotify_audio_features"] = spotify_audio_features
+        track_id = deepcopy(item["track_id"])
+        del item["track_id"]
+        trackid_to_spotify_features[track_id] = item
+
+    if write:   
         with open(output_path, "w") as f:
             json.dump(trackid_to_spotify_features, f, indent=4)
+            print(f"Output saved to {output_path}")
 
 
 ### PART II: Dealing with symbolic music data
@@ -164,16 +219,14 @@ Revert match scores file to have mapping midi_file -> track_ID
 """
 
 output_path = os.path.join(output_dir, "match_scores_reverse.json")
-
 if os.path.exists(output_path) and not redo:
     with open(output_path, "r") as f:
         match_scores_reversed = json.load(f)
 else:
     with open(match_scores_path, "r") as f:
         in_data = json.load(f)
-
     match_scores_reversed = {}
-    print("Reversing match scores")
+    print("Reversing match scores.")
     for track_id, matching in tqdm(in_data.items()):
         for file_, score in matching.items():
             if file_ not in match_scores_reversed.keys():
@@ -190,20 +243,22 @@ else:
     if write:
         with open(output_path, "w") as f:
             json.dump(match_scores_reversed, f, indent=4)
+            print(f"Output saved to {output_path}")
 
 # 5- Filter match scores to only keep best match
-
 output_path = os.path.join(output_dir, "best_match_scores.json")
 if os.path.exists(output_path) and not redo:
     with open(output_path, "r") as f:
         best_match_scores_reversed = json.load(f)
 else:
     best_match_scores_reversed = {}
+    print("Selecting best matching tracks.")
     for midi_file, match in tqdm(match_scores_reversed.items()):
         best_match_scores_reversed[midi_file] = list(match.items())[0]
     if write:
         with open(output_path, "w") as f:
             json.dump(best_match_scores_reversed, f, indent=4)
+            print(f"Output saved to {output_path}")
 
 ### 6- Filter unique midis
 """LMD was created by creating hashes for the entire files
@@ -225,8 +280,8 @@ else:
         return [file_, hash_]
 
     file_paths = sorted(glob(midi_dataset_path + "/**/*" + extension, recursive=True))
-
-    print("Getting hashes for midis.")
+    assert len(file_paths) > 0, f"No MIDI files found at {midi_dataset_path}"
+    print("Getting hashes for MIDIs.")
     midi_file_to_hash = run_parallel(get_hash_and_file, file_paths)
     midi_file_to_hash = sorted(midi_file_to_hash, key=lambda x:x[0])
     midi_file_to_hash = dict(midi_file_to_hash)
@@ -254,6 +309,7 @@ else:
 
     midi_files_unique = []
     # Get unique midis (with highest match score)
+    print("Getting unique MIDIs.")
     for hash, midi_files_and_match_scores in hash_to_midi_file.items():
         if hash != "empty_pianoroll":
             midi_files_and_match_scores = sorted(midi_files_and_match_scores, key=lambda x: x[1], reverse=True)
@@ -261,6 +317,7 @@ else:
     if write:
         with open(output_path, "w") as f:
             json.dump(midi_files_unique, f, indent=4)
+            print(f"Output saved to {output_path}")
 
 # create unique matched midis list
 midi_files_matched = list(match_scores_reversed.keys())
@@ -270,10 +327,12 @@ if os.path.exists(output_path) and not redo:
     with open(output_path, "r") as f:
         midi_files_matched_unique = json.load(f)
 else:
+    print("Getting unique matched MIDIs.")
     midi_files_matched_unique = sorted(list(set(midi_files_matched).intersection(midi_files_unique)))
     if write:
         with open(output_path, "w") as f:
             json.dump(midi_files_matched_unique, f, indent=4)
+            print(f"Output saved to {output_path}")
 
 # create unique unmatched midis list
 output_path = os.path.join(output_dir, "midis_unmatched_unique.json")
@@ -281,10 +340,12 @@ if os.path.exists(output_path) and not redo:
     with open(output_path, "r") as f:
         midi_files_unmatched_unique = json.load(f)
 else:
+    print("Getting unique unmatched MIDIs.")
     midi_files_unmatched_unique = sorted(list(set(midi_files_unique) - set(midi_files_matched_unique)))
     if write:
         with open(output_path, "w") as f:
             json.dump(midi_files_unmatched_unique, f, indent=4)
+            print(f"Output saved to {output_path}")
 
 ### 6- Create mappings: midi -> best matching track ID, spotify features
 output_path = os.path.join(output_dir, "spotify_features.json")
@@ -293,6 +354,7 @@ if os.path.exists(output_path) and not redo:
         midi_file_to_spotify_features = json.load(f)
 else:
     midi_file_to_spotify_features = {}
+    print("Adding Spotify for matched unique MIDIs.")
     for pr in tqdm(midi_files_matched_unique):
         sample_data = {}
         sample_data["track_id"], sample_data["match_score"] = best_match_scores_reversed[pr]
@@ -302,6 +364,7 @@ else:
     if write:
         with open(output_path, "w") as f:
             json.dump(midi_file_to_spotify_features, f, indent=4)
+            print(f"Output saved to {output_path}")
 
 ### 7- For all midis, get low level features 
 # (tempo, note density, number of instruments)
@@ -328,21 +391,22 @@ else:
             "duration": duration,
         }
         return [midi_file, midi_features]
-
+    print("Getting low-level MIDI features")
     midi_file_to_midi_features = run_parallel(get_midi_features, midi_files_unique)
     midi_file_to_midi_features = dict(midi_file_to_midi_features)
     if write:
         with open(output_path, "w") as f:
             json.dump(midi_file_to_midi_features, f, indent=4)
+            print(f"Output saved to {output_path}")
 
-### 8- Merge midi features and matched (Spotify) features
-
+### 8- Merge MIDI features and matched (Spotify) features
 output_path = os.path.join(output_dir, "full_dataset_features.json")
 if os.path.exists(output_path) and not redo:
     with open(output_path, "r") as f:
         midi_file_to_merged_features = json.load(f)
 else:
     midi_file_to_merged_features = {}
+    print("Merging MIDI features and Spotify features for full dataset.")
     for midi_file in tqdm(midi_file_to_midi_features.keys()):
         midi_file_to_merged_features[midi_file] = {}
         midi_file_to_merged_features[midi_file]["midi_features"] = midi_file_to_midi_features[midi_file]
@@ -354,6 +418,7 @@ else:
     if write:
         with open(output_path, "w") as f:
             json.dump(midi_file_to_merged_features, f, indent=4)
+            print(f"Output saved to {output_path}")
 
 ### Do the same for matched dataset
 output_path = os.path.join(output_dir, "matched_dataset_features.json")
@@ -361,11 +426,13 @@ if os.path.exists(output_path) and not redo:
     with open(output_path, "r") as f:
         matched_midi_file_to_merged_features = json.load(f)
 else:
+    print("Merging MIDI features and Spotify features for the matched dataset.")
     matched_midi_file_to_merged_features = \
         {file_: midi_file_to_merged_features[file_] for file_ in tqdm(midi_files_matched_unique)}
     if write:
         with open(output_path, "w") as f:
             json.dump(matched_midi_file_to_merged_features, f, indent=4)
+            print(f"Output saved to {output_path}")
 
 ### PART III: Constructing training dataset
 ### 9- Summarize matched dataset features by only taking valence and note densities per instrument,
@@ -373,13 +440,12 @@ else:
 
 output_path = os.path.join(output_dir, "full_dataset_features_summarized.csv")
 if not os.path.exists(output_path) or redo:
+    print("Constructing training dataset (final file)")
     dataset_summarized = []
     for midi_file, features in tqdm(midi_file_to_merged_features.items()):
-        
         midi_features = features["midi_features"]
         n_instruments = midi_features["n_instruments"]
         note_density_per_instrument = midi_features["note_density"] / n_instruments
-        
         matched_features = features["matched_features"]
         if matched_features == {}:
             is_matched = False
@@ -387,12 +453,15 @@ if not os.path.exists(output_path) or redo:
         else:
             is_matched = True
             spotify_audio_features = matched_features["spotify_audio_features"]
-            if spotify_audio_features is None or spotify_audio_features["valence"] == 0.0:
-                # An unusual number of samples have a valence of 0.0
-                # which is possibly due to an error. Feel free to comment out.
+            if spotify_audio_features is None or spotify_audio_features == "":
                 valence = float("nan")
             else:
-                valence = spotify_audio_features["valence"]
+                if spotify_audio_features["valence"] == 0.0:
+                    # An unusual number of samples have a valence of 0.0
+                    # which is possibly due to an error. Feel free to comment out.
+                    valence = float("nan")
+                else:
+                    valence = spotify_audio_features["valence"]
         
         dataset_summarized.append({
             "file": midi_file,
@@ -401,8 +470,7 @@ if not os.path.exists(output_path) or redo:
             "note_density_per_instrument": note_density_per_instrument,
             "valence": valence
         })
-
     dataset_summarized = pd.DataFrame(dataset_summarized)
-        
     if write:
         dataset_summarized.to_csv(output_path, index=False)
+        print(f"Output saved to {output_path}")

@@ -6,6 +6,7 @@ import json
 import pypianoroll
 import numpy as np
 import pretty_midi
+import csv
 
 """
 You'll need a client ID and a client secret:
@@ -13,8 +14,8 @@ https://developer.spotify.com/dashboard/applications
 Then, fill in the variables client_id and client_secret
 """
 
-client_id = 'to fill in'
-client_secret = 'to fill in'
+client_id = ''
+client_secret = ''
 client_credentials_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
 sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
@@ -91,6 +92,7 @@ def try_multiple(func, *args, **kwargs):
                 out = func(**kwargs)
             failed = False
         except Exception as e:
+            # print(e.error_description)
             if e.args[0] == 404:
                 return None
             else:
@@ -101,8 +103,11 @@ def search_spotify(title, artist, album=None):
     query = '"{}"+artist:"{}"'.format(title, artist)
     if album is not None:
         query += '+album:"{}"'.format(album)
-    result = try_multiple(sp.search, q=query, type='track')
-    items = result['tracks']['items']
+    if len(query) <= 250:
+        result = try_multiple(sp.search, q=query, type='track')
+        items = result['tracks']['items']
+    else:   # spotify doesnt search with a query longer than 250 characters
+        items = []
     return items
 
 
@@ -130,9 +135,10 @@ def search_spotify_flexible(title, artist, album):
         max_popularity = 0
         best_ind = 0
         for i, item in enumerate(items):
-            if item["popularity"] > max_popularity:
-                max_popularity = item["popularity"]
-                best_ind = i
+            if item is not None:
+                if item["popularity"] > max_popularity:
+                    max_popularity = item["popularity"]
+                    best_ind = i
         item = items[best_ind]
     return item
 
@@ -160,7 +166,10 @@ def get_spotify_tracks(uri_list):
     if len(uri_list) > 50:
         uri_list = uri_list[:50]
     tracks = try_multiple(sp.tracks, uri_list)
-    return tracks["tracks"]
+    if tracks == None:
+        return None
+    else:
+        return tracks["tracks"]
 
 
 def strip_artist(s):
@@ -199,3 +208,9 @@ def get_spotify_ids(json_path):
                 if track["catalog"] == "spotify" and "foreign_id" in list(track.keys()):
                     spotify_ids.append(track["foreign_id"].split(":")[-1])
     return spotify_ids
+
+def read_csv(input_file_path, delimiter=","):
+    with open(input_file_path, "r") as f_in:
+        reader = csv.DictReader(f_in, delimiter=delimiter)
+        data = [{key: value for key, value in row.items()} for row in reader]
+    return data
