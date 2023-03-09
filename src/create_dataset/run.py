@@ -32,8 +32,8 @@ def run_parallel(func, my_iter):
         results = list(tqdm(executor.map(func, my_iter), total=len(my_iter)))
     return results
 
-write = True
-redo = False
+write = False
+redo = True
 
 main_output_dir = "../../data_files/features"
 os.makedirs(main_output_dir, exist_ok=True)

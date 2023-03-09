@@ -11,7 +11,7 @@ Required Python libraries: Numpy, Pytorch, Pandas, pretty_midi, Pypianoroll, tqd
 
 To create the Lakh-Spotify dataset:
 
-- Go to the src/create_dataset folder
+- Go to the ```src/create_dataset``` folder
 
 - Download the datasets:
 
@@ -35,6 +35,10 @@ https://developer.spotify.com/dashboard/applications
 Then, fill in the variables "client_id" and "client_secret" in ```src/create_dataset/utils.py```
 
 - Run ```run.py```. 
+
+To preprocess and create the training dataset:
+
+- Go to the ```src/data``` folder and run ```preprocess_pianorolls.py```
 
 
 To generate MIDI using pretrained models:

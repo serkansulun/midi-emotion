@@ -7,7 +7,6 @@ from concurrent.futures import ProcessPoolExecutor
 import time
 from functools import partial
 import os
-import argparse
 
 """ Preprocessing Lakh MIDI pianoroll dataset.
 Divides into bars. Encodes into tuples. Makes transposing easier. """
@@ -42,10 +41,6 @@ def process(pr_path, event_sym2idx):
 
 def main():
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--debug", action="store_true")
-    args = parser.parse_args()
-
     main_dir = "../../data_files/lpd_5"
     input_dir = "../../data_files/lpd_5/lpd_5_full"
     unique_pr_list_file = "../../data_files/features/pianoroll/unique_files.json"
@@ -64,9 +59,6 @@ def main():
     
     func = partial(process, event_sym2idx=maps["event2idx"])
 
-    if args.debug:
-        output_dir = output_dir + "_debug"
-        pr_paths = pr_paths[:1000]
     os.makedirs(output_dir, exist_ok=True)
 
     x = run(func, pr_paths)
