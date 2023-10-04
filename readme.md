@@ -44,7 +44,7 @@ To preprocess and create the training dataset:
 To generate MIDI using pretrained models:
 
 - Download model(s) from the following link:
-https://drive.google.com/drive/folders/1qFgomRDXmx8ewRz_E0X2T10CY-w_kUFt?usp=sharing
+https://drive.google.com/drive/folders/1R5-HaXmNzXBAhGq1idrDF-YEKkZm5C8C?usp=sharing
 
 - Extract into the folder ```output```
 
