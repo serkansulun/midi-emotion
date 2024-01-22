@@ -3,7 +3,7 @@ import csv
 import shutil
 import functools
 import os
-import nvsmi
+# import nvsmi
 
 def memory():
     allocated = torch.cuda.memory_allocated() // 1024**2
@@ -165,3 +165,12 @@ def get_n_instruments(symbols):
     symbols_split = [s[1] for s in symbols_split if len(s) == 3]
     events = list(set(symbols_split))
     return len(events)
+
+def read_csv(input_file_path, delimiter=",", numeric=False):
+    with open(input_file_path, "r") as f_in:
+        reader = csv.DictReader(f_in, delimiter=delimiter)
+        if numeric:
+            data = [{key: float(value) for key, value in row.items()} for row in reader]
+        else:
+            data = [{key: value for key, value in row.items()} for row in reader]
+    return data

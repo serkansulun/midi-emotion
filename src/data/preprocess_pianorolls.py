@@ -8,6 +8,9 @@ import time
 from functools import partial
 import os
 import argparse
+import sys
+sys.path.append('..')
+import utils
 
 """ Preprocessing Lakh MIDI pianoroll dataset.
 Divides into bars. Encodes into tuples. Makes transposing easier. """
@@ -47,18 +50,28 @@ def main():
     args = parser.parse_args()
 
     main_dir = "../../data_files/lpd_5"
-    input_dir = "../../data_files/lpd_5/lpd_5_full"
-    unique_pr_list_file = "../../data_files/features/pianoroll/unique_files.json"
+    input_dir = "../../../../data/midi/lpd_5/lpd_5_full"
+    
 
     output_dir = os.path.join(main_dir, "lpd_5_full_transposable")
     
     os.makedirs(output_dir, exist_ok=True)
     output_maps_path = os.path.join(main_dir, "maps.pt")
 
-    with open(unique_pr_list_file, "r") as f:
-        pr_paths = json.load(f)
-
-    pr_paths = [os.path.join(input_dir, pr_path[0], pr_path + ".npz") for pr_path in pr_paths]
+    # # Get unique pianorolls
+    # unique_pr_list_file = "../../data_files/features/pianoroll/unique_files.json"
+    # with open(unique_pr_list_file, "r") as f:
+    #     pr_paths = json.load(f)
+    # pr_paths = [os.path.join(input_dir, pr_path[0], pr_path + ".npz") for pr_path in pr_paths]
+    
+    # Get unique pianorolls
+    features_fp = "../../data_files/lpd_5/features.csv"
+    features_data = utils.read_csv(features_fp)
+    pr_paths = []
+    for sample in features_data:
+        id = sample['file']
+        pr_path = os.path.join(input_dir, id[0], id + '.npz')
+        pr_paths.append(pr_path)
 
     maps = get_maps()
     
