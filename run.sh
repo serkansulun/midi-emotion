@@ -3,12 +3,12 @@
 #SBATCH --partition=cpu_14cores           # Partition (check with "$sinfo")
 #SBATCH --output=log_slurm/%j.txt          # Filename with STDOUT. You can use special flags, such as %N and %j.
 #SBATCH --qos=cpu_14cores                 # (Optional) QoS level (check with "$sacctmgr show qos")
-#SBATCH --job-name=filetransfer             # Job name​
+#SBATCH --job-name=processing             # Job name​
 
-# cd src/data
-# ~/.conda/envs/torch/bin/python preprocess_pianorolls.py
+cd src/data
+~/.conda/envs/torch/bin/python preprocess_pianorolls.py
 
-cp -r ~/data/midi/lpd_5/lakh_pianoroll_dataset_5_full /nas-ctm01/datasets/public/
+# cp -r ~/data/midi/lpd_5/lakh_pianoroll_dataset_5_full /nas-ctm01/datasets/public/
 
 # ~/.conda/envs/torch/bin/python train.py --debug --log_step 100 --n_layer 8 --max_step 300
 

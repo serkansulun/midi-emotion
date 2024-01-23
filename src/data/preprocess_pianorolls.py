@@ -50,9 +50,8 @@ def main():
     args = parser.parse_args()
 
     main_dir = "../../data_files/lpd_5"
-    input_dir = "../../../../data/midi/lpd_5/lpd_5_full"
+    input_dir = "../../../../../../datasets/public/lakh_pianoroll_5"
     
-
     output_dir = os.path.join(main_dir, "lpd_5_full_transposable")
     
     os.makedirs(output_dir, exist_ok=True)
