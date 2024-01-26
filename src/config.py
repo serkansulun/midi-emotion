@@ -4,6 +4,8 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Generates emotion-based symbolic music')
 
+parser.add_argument('--note', default=None, type=str,
+                    help='Notes about the experiment.')
 parser.add_argument("--conditioning", type=str, required=False, default="continuous_concat",
                     choices=["none", "discrete_token", "continuous_token",
                              "continuous_concat"], help='Conditioning type')

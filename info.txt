@@ -1,0 +1,130 @@
+### HOW TO USE SLURM
+
+How to connect to VPN:
+https://help.inesctec.pt/doku.php?id=kb:kb211130en
+
+Adding SLURM server as alias:
+Add the following to ~/.ssh/config (create if doesn't exist)
+
+Host slurm
+    HostName ctm-login.inesctec.pt
+    User your_user_name
+    UserKnownHostsFile=/dev/null
+    StrictHostKeyChecking=no
+
+Then you can connect using:
+ssh slurm
+
+I prefer to mount my work folder and open the IDE (so that I can debug using my CPU):
+sudo sshfs -o reconnect,ServerAliveInterval=15,ServerAliveCountMax=3,allow_other,StrictHostKeyChecking=no,UserKnownHostsFile=/dev/null your_slurm_username@ctm-login.inesctec.pt:/nas-ctm01/homes/your_slurm_username/your_folder_path /path_to_your_local_mount_folder
+
+Also, sometimes things disconnect, so I'd need to unmount and remount. But also sometimes the mounting application keeps running in the background so I'll need to kill it first. So, I have the following script, to kill, unmount and mount. I assign an alias pointing to that script, so with one word, I can do everything:
+
+#!/bin/bash
+line=$(pgrep -lf sshfs)
+pid=${line%" sshfs"}
+sudo kill -9 $pid
+sudo umount -l /your_mount_folder
+sudo sshfs -o reconnect,ServerAliveInterval=15,ServerAliveCountMax=3,allow_other,StrictHostKeyChecking=no,UserKnownHostsFile=/dev/null your_slurm_username@ctm-login.inesctec.pt:/nas-ctm01/homes/your_slurm_username/your_folder_path /path_to_your_local_mount_folder
+$SHELL
+
+Once you're in SLURM
+As I said, I open the mounted folder in VSCode first. Then I open a terminal and ssh into the server. I keep all the paths in my Python code relative (not absolute), so that I can run everything in the server or in my own machine.
+
+You can find most information here:
+https://gitlab.inesctec.pt/ctm-slurm/ctm-slurm-users
+
+Once you are in the server, you'll be at the login node (no GPU, you shouldn't do heavy processing or something that would take a long time here). The jobs are sent to GPU nodes, using batch scripts. Here is how my batch script looks like:
+
+#!/bin/bash
+#SBATCH --partition=gpu_min80GB           # Partition (check with "$sinfo")
+#SBATCH --qos=gpu_min80GB   
+#SBATCH --output=log_slurm/%j.txt          # Filename with STDOUT. You can use special flags, such as %N and %j.
+#SBATCH --job-name=train_midi             # Job name​
+cd src
+~/.conda/envs/torch/bin/python train.py
+
+Change the variables as you wish. Note that I am call Python from inside the conda environment.
+
+This is the batch mode. There is also the interactive mode that I sometimes use to check things or for debugging. Though I debug on my own machine, things might change when you use the GPU, so this would be a second debugging step. You can access the interactive mode by:
+
+srun -N 1 -n 1 -p gpu_min80GB -q gpu_min80GB --pty bash -i
+
+Again, change the GPU as you wish. I mostly use the debug partition in interactive mode. It has 15 minutes of lifetime, so that I don't block any GPU for minor things.
+
+srun -N 1 -n 1 -p debug_8GB --pty bash -i
+
+I save this as an alias also, and put into ~/.bashrc
+
+You can use the interactive mode to install packages, so that they work well with the GPU (of course, first activate your conda environment). You should install Pytorch in this mode, exactly as it says in their website (not just "pip install torch"). Once install, you can check if it can use the GPU. In interactive mode, activate your conda environment and start Python. Then the following should return True:
+
+import torch
+torch.cuda.is_available()
+
+
+### GOOD PRACTICES AND SANITY CHECKS
+
+At first, run everything in small scale to see it works. Smaller model, smaller data. With smaller data, you should see a steady decrease in training loss, if not, something is wrong. Of course, you probably will see overfitting, but that's okay.
+
+Make sure the data and model weights are on the GPU, before forward pass.
+
+To initally decide the learning rate, you can do a primitive grid search. Choose 4-6 learning rates, increasing logarithmically. Train using those learning rates, for ~1000 steps, without evaluation, each time starting from scratch. Pick the one with lowest training loss. The batch script will look like this:
+
+cd src
+~/.conda/envs/torch/bin/python train.py --debug --max_step 1001 --log_step 1000 --eval_step 1002 --lr 1e-6
+~/.conda/envs/torch/bin/python train.py --debug --max_step 1001 --log_step 1000 --eval_step 1002 --lr 5e-6
+~/.conda/envs/torch/bin/python train.py --debug --max_step 1001 --log_step 1000 --eval_step 1002 --lr 1e-5
+~/.conda/envs/torch/bin/python train.py --debug --max_step 1001 --log_step 1000 --eval_step 1002 --lr 5e-5
+~/.conda/envs/torch/bin/python train.py --debug --max_step 1001 --log_step 1000 --eval_step 1002 --lr 1e-4
+
+Try not to choose very big GPUs if you don't need to. Once everything is perfect, we can do the actual training the largest GPU, if our goal is to train a huge model. You can use torch functions to check memory usage:
+https://pytorch.org/docs/stable/cuda.html#memory-management
+
+Also, you can check the real memory usage using nvsmi package. See my "memory" function in "utils.py"
+
+For each experiment, a different output folder and log file is created. If you are just debugging, use --debug flag, so that an output folder isn't created. When you are doing actual training, make sure to save your weights, both the latest version, and the version with the lowest validation loss, if you have the space. I also include a note, which briefly explains the experiment (especially if I'm comparing with something else). It then creates an empty file in the output directory, so I can compare different runs. For example, it can be "faster transformer lr 1e-5"
+
+I'm also copying my email here, so that it's accessible:
+
+About the literature: These should also be cited in my paper already:
+
+Transformers (don't worry if you don't understand the math) : https://proceedings.neurips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf
+
+Blog post for simpler explanation: https://jalammar.github.io/illustrated-transformer/
+
+Music transformer: https://arxiv.org/pdf/1809.04281.pdf
+
+Tokenization of MIDI (Especially Fig 5): https://arxiv.org/pdf/1808.03715.pdf
+
+My lecture (towards the end): https://youtu.be/UWMX8iy2FL8?feature=shared&t=4262
+
+Closed-source SOTA MIDI generator by OpenAI (we can try to re-use their model size and context length, see if it fits 80 GB): https://openai.com/research/musenet
+
+Fast (linear) transformers (don't worry if you don't understand the math): https://proceedings.mlr.press/v119/katharopoulos20a/katharopoulos20a.pdf
+
+
+I have also added you to the project on Gitlab as a developer (I hope that's enough access, if not let me know). This has the new feature "fast_transformers" that uses less memory (see config.py). I tested it, but haven't trained a model with it.
+
+Once you get comfortable, here are some things you can try that would be some improvements on the current model (preferably continuous_token):
+
+Seeing if fast_transformers is better (I'm hoping my implementation works, you won't need to code here).
+
+1- Training a conditional model from scratch.
+
+2- Same as 1, same parameters, using fast_transformers, see if it is better.
+
+3- Same as 2, using fast_transformers, larger model BUT MATCHING GPU USAGE with point 1, see if it's better.
+
+Continuing with whichever is better, standard or fast_transformer...
+
+3b- If standard is better, try automatic mixed precision and see if it is faster or better. See args.amp in config.py.
+
+4- Increasing model size and context length (you can copy MuseNet's parameters, or even exceed them), fitting it to 80 GB, see if there is no overfitting, if test loss is better, and if model outputs sound better. Again, no coding is needed.
+
+5- Introducing a <NO_VALENCE> token, training using a balanced mix of labeled and non-labeled samples (maybe 50%-50%, or experiment). In the model continuous_token, there are no discrete tokens, so we will need to embed this <NO_VALENCE> token. Which is basically a single vector that is trainable (nn.Parameter). This is the same thing I did with the <START> token.
+
+You can, and in time you should move to implement the next item, while you are training for the previous item, especially when you are training the largest models which take days. Check the SLURM queue (squeue), and if there is space (there usually is), test out some new things in debug mode (small model, small dataset) in smaller GPUs, or even in the "debug" partition. As you will see in my code, each run has a separate log and output folder, so that things don't get messy while you are running multiple jobs simultaneously.
+
+
+
+

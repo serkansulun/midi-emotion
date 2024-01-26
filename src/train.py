@@ -30,6 +30,11 @@ if args.seed > 0:
 class Runner:
     def __init__(self):
         self.logging = create_exp_dir(args.work_dir, debug=args.debug)
+        if not args.debug and args.note != None:
+            # write the note in folder for ease of comparison and viewing
+            open(os.path.join(args.work_dir, 'aa ' + args.note), "x")
+
+
         use_cuda = torch.cuda.is_available() and not args.no_cuda
         self.device = torch.device('cuda' if use_cuda else 'cpu')
         if self.device == torch.device("cuda"):
