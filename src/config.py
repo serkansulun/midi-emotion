@@ -138,8 +138,8 @@ if args.full_dataset:
     assert args.conditioning in ["discrete_token", "none"] and not args.regression, "LPD-full has NaN features"
 
 if args.regression:
-    args.n_layer = 8
-    print("Using 8 layers for regression")
+    # args.n_layer = 8
+    print(f"Using {args.n_layer} layers for regression")
 
 args.batch_chunk = -1
 

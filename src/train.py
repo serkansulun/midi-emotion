@@ -237,8 +237,8 @@ class Runner:
         with torch.no_grad():
             n_batches = len(self.test_loader)
             loader = enumerate(self.test_loader)
-            if args.exhaustive_eval or args.regression:
-                loader = tqdm(loader, total=n_batches)
+            # if args.exhaustive_eval or args.regression:
+            #     loader = tqdm(loader, total=n_batches)
             for i, (input_, condition, target) in loader:
                 if args.max_eval_step > 0 and i >= args.max_eval_step:
                     break
@@ -299,6 +299,7 @@ class Runner:
         train_loss = 0
         n_elements_total = 0
         train_interval_start = time.time()
+        once = True
 
         while True:
             for input_, condition, target in self.train_loader:
@@ -373,41 +374,42 @@ class Runner:
                             step=str(self.train_step), primers=primers,
                             temperatures=[args.temp_note, args.temp_rest])
                         
-                if (self.train_step % args.log_step == 0) and self.train_step > 0:
+                if (self.train_step % args.log_step == 0) and self.train_step > 0 and n_elements_total > 0:
                     # Print log
-                    if n_elements_total > 0:
+                    if once:
                         print(memory())
-                        cur_loss = train_loss / n_elements_total
-                        elapsed_total = time.time() - self.init_time
-                        elapsed_interval = time.time() - train_interval_start
-                        hours_elapsed = elapsed_total / 3600.0
-                        hours_total = self.init_hours + hours_elapsed
-                        lr = self.optimizer.param_groups[0]['lr']
-                        log_str = '| Epoch {:3d} step {:>8d} | {:>6d} sequences  | {:>3.1f} h | lr {:.2e} ' \
-                                '| ms/batch {:4.0f} | ms/sample {:4.0f} | loss {:7.4f}'.format(
-                            self.epoch, self.train_step, self.n_sequences_total, hours_total, lr,
-                            elapsed_interval * 1000 / args.log_step,
-                            elapsed_interval * 1000 / args.log_step / args.batch_size, cur_loss)
-                        self.logging(log_str)
-                        self.csv_writer.update({"epoch": self.epoch, "step": self.train_step, "hour": hours_total,
-                                                "lr": lr, "trn_loss": cur_loss, "val_loss": np.nan,
-                                                "val_l1_v": np.nan, "val_l1_a": np.nan})
-                        train_loss = 0
-                        n_elements_total = 0
-                        self.n_good_output, self.n_nan_output = 0, 0
-                        train_interval_start = time.time() 
+                        once = False
+                    cur_loss = train_loss / n_elements_total
+                    elapsed_total = time.time() - self.init_time
+                    elapsed_interval = time.time() - train_interval_start
+                    hours_elapsed = elapsed_total / 3600.0
+                    hours_total = self.init_hours + hours_elapsed
+                    lr = self.optimizer.param_groups[0]['lr']
+                    log_str = '| Epoch {:3d} step {:>8d} | {:>6d} sequences  | {:>3.1f} h | lr {:.2e} ' \
+                            '| ms/batch {:4.0f} | ms/sample {:4.0f} | loss {:7.4f}'.format(
+                        self.epoch, self.train_step, self.n_sequences_total, hours_total, lr,
+                        elapsed_interval * 1000 / args.log_step,
+                        elapsed_interval * 1000 / args.log_step / args.batch_size, cur_loss)
+                    self.logging(log_str)
+                    self.csv_writer.update({"epoch": self.epoch, "step": self.train_step, "hour": hours_total,
+                                            "lr": lr, "trn_loss": cur_loss, "val_loss": np.nan,
+                                            "val_l1_v": np.nan, "val_l1_a": np.nan})
+                    train_loss = 0
+                    n_elements_total = 0
+                    self.n_good_output, self.n_nan_output = 0, 0
+                    train_interval_start = time.time() 
 
-                        if not args.debug:  
-                            # Save model
-                            model_fp = os.path.join(args.work_dir, 'model.pt')
-                            torch.save(self.model.state_dict(), model_fp)
-                            optimizer_fp = os.path.join(args.work_dir, 'optimizer.pt')
-                            torch.save(self.optimizer.state_dict(), optimizer_fp)
-                            scaler_fp = os.path.join(args.work_dir, 'scaler.pt')
-                            torch.save(self.scaler.state_dict(), scaler_fp)
-                            torch.save({"step": self.train_step, "hour": hours_total, "epoch": self.epoch,
-                                        "sample": self.n_sequences_total}, 
-                                        os.path.join(args.work_dir, 'stats.pt'))
+                    if not args.debug:  
+                        # Save model
+                        model_fp = os.path.join(args.work_dir, 'model.pt')
+                        torch.save(self.model.state_dict(), model_fp)
+                        optimizer_fp = os.path.join(args.work_dir, 'optimizer.pt')
+                        torch.save(self.optimizer.state_dict(), optimizer_fp)
+                        scaler_fp = os.path.join(args.work_dir, 'scaler.pt')
+                        torch.save(self.scaler.state_dict(), scaler_fp)
+                        torch.save({"step": self.train_step, "hour": hours_total, "epoch": self.epoch,
+                                    "sample": self.n_sequences_total}, 
+                                    os.path.join(args.work_dir, 'stats.pt'))
                     
                 if (self.train_step % args.eval_step == 0) and self.train_step > 0:
                     # Evaluate model
