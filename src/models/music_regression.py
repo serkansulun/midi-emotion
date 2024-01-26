@@ -38,7 +38,7 @@ class MusicRegression(torch.nn.Module):
                  ):
         super().__init__()
 
-        assert d_condition <= 0
+        # assert d_condition <= 0
 
         self.max_seq = max_seq
         self.num_layer = num_layer

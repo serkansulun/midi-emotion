@@ -1,7 +1,7 @@
 import torch
 import re
 # from torch._six import container_abcs, string_classes, int_classes
-from torch._six import string_classes
+# from torch._six import string_classes
 import collections
 """
 Modified by Serkan Sulun
@@ -67,8 +67,8 @@ def filter_collate(batch):
             return torch.tensor(batch, dtype=torch.float64)
         elif isinstance(batch[0], int):
             return torch.tensor(batch)
-        elif isinstance(batch[0], string_classes):
-            return batch
+        # elif isinstance(batch[0], string_classes):
+        #     return batch
         elif isinstance(batch[0], collections.abc.Mapping):
             return {key: filter_collate([d[key] for d in batch]) for key in batch[0]}
         elif isinstance(batch[0], tuple) and hasattr(batch[0], '_fields'):  # namedtuple

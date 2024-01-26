@@ -130,6 +130,10 @@ assert not (args.exhaustive_eval and args.max_eval_step > 0)
 
 assert (args.attn_type == "full") or args.no_amp, "Linear attention doesn't work with AMP"
 
+if args.fast_transformers:
+    args.attn_type = 'linear'
+    print("Using fast transformers, switching to linear attention.")
+
 if args.full_dataset:
     assert args.conditioning in ["discrete_token", "none"] and not args.regression, "LPD-full has NaN features"
 

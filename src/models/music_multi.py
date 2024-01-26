@@ -40,7 +40,7 @@ def generate_mask(x, pad_token=None, batch_first=True):
 
 class MusicTransformerMulti(torch.nn.Module):
     def __init__(self, embedding_dim=None, d_inner=None, d_condition=None, vocab_size=None, num_layer=None, num_head=None,
-                 max_seq=None, dropout=None, pad_token=None, attn_type=None
+                 max_seq=None, dropout=None, pad_token=None, attn_type=None,
                  ):
         super().__init__()
 

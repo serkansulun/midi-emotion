@@ -56,7 +56,7 @@ class Runner:
 
         # Preprocessing
         train_feats, test_feats = preprocess_features(
-            "../data_files/features/pianoroll/full_dataset_features_summarized.csv",
+            "../data_files/lpd_5/features.csv",
             n_bins=n_bins, conditional=conditional, 
             use_labeled_only=not args.full_dataset)
 

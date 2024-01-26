@@ -5,3 +5,4 @@ lpd_5_full_transposable*
 output/*
 datasets/
 log_slurm/
+run.sh

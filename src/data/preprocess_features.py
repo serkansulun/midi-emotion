@@ -7,6 +7,9 @@ def preprocess_features(feature_file, n_bins=None, min_n_instruments=3,
 
     # Preprocess data
     data = pd.read_csv(feature_file)
+
+    data['note_density_per_instrument'] = data['note_density_per_track'] / data['n_instruments']
+
     mapper = {"valence": "valence", "note_density_per_instrument": "arousal"}
     data = data.rename(columns=mapper)
     columns = data.columns.to_list()

@@ -3,24 +3,27 @@ import csv
 import shutil
 import functools
 import os
-# import nvsmi
+import nvsmi
 
 def memory():
-    allocated = torch.cuda.memory_allocated() // 1024**2
-    max_allocated = torch.cuda.max_memory_allocated() // 1024**2
-    cached = torch.cuda.memory_reserved() // 1024**2
-    max_cached = torch.cuda.max_memory_reserved() // 1024**2
-    # print(list(nvsmi.get_gpus()))
-    gpu = list(nvsmi.get_gpus())[0]
-    nvidia_used = gpu.mem_used
-    mem_dict = {
-        "allocated": allocated,
-        "max_allocated": max_allocated,
-        "cached": cached,
-        "max_cached": max_cached,
-        "nvsmi": nvidia_used
-    }
-    mem_str = ", ".join([f"{key}: {val:.0f}" for key, val in mem_dict.items()])
+    if torch.cuda.is_available():
+        allocated = torch.cuda.memory_allocated() // 1024**2
+        max_allocated = torch.cuda.max_memory_allocated() // 1024**2
+        cached = torch.cuda.memory_reserved() // 1024**2
+        max_cached = torch.cuda.max_memory_reserved() // 1024**2
+        # print(list(nvsmi.get_gpus()))
+        gpu = list(nvsmi.get_gpus())[0]
+        nvidia_used = gpu.mem_used
+        mem_dict = {
+            "allocated": allocated,
+            "max_allocated": max_allocated,
+            "cached": cached,
+            "max_cached": max_cached,
+            "nvsmi": nvidia_used
+        }
+        mem_str = ", ".join([f"{key}: {val:.0f}" for key, val in mem_dict.items()])
+    else:
+        mem_str = "CUDA is not available."
     return mem_str
 
 
