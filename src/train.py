@@ -47,6 +47,8 @@ class Runner:
         self.init_hours = 0
         self.epoch = 0
         self.init_time = time.time()
+        self.hours_total = 0
+        # best_train_loss = float("inf")
 
         # Load data
         n_bins = args.n_emotion_bins if args.conditioning == "discrete_token" and \
@@ -297,6 +299,7 @@ class Runner:
         self.model.train()
 
         train_loss = 0
+        best_train_loss = float("inf")
         n_elements_total = 0
         train_interval_start = time.time()
         once = True
@@ -394,41 +397,38 @@ class Runner:
                     self.csv_writer.update({"epoch": self.epoch, "step": self.train_step, "hour": hours_total,
                                             "lr": lr, "trn_loss": cur_loss, "val_loss": np.nan,
                                             "val_l1_v": np.nan, "val_l1_a": np.nan})
+                    
+                    if not args.debug:  # Save model
+                        save_dir = os.path.join(args.work_dir, "latest_model")
+                        self.save_model(save_dir)
+                        if train_loss < best_train_loss:
+                            best_train_loss = train_loss
+                            save_dir = os.path.join(args.work_dir, "best_trn_model")
+                            self.save_model(save_dir)
+                    
                     train_loss = 0
                     n_elements_total = 0
                     self.n_good_output, self.n_nan_output = 0, 0
                     train_interval_start = time.time() 
-
-                    if not args.debug:  
-                        # Save model
-                        model_fp = os.path.join(args.work_dir, 'model.pt')
-                        torch.save(self.model.state_dict(), model_fp)
-                        optimizer_fp = os.path.join(args.work_dir, 'optimizer.pt')
-                        torch.save(self.optimizer.state_dict(), optimizer_fp)
-                        scaler_fp = os.path.join(args.work_dir, 'scaler.pt')
-                        torch.save(self.scaler.state_dict(), scaler_fp)
-                        torch.save({"step": self.train_step, "hour": hours_total, "epoch": self.epoch,
-                                    "sample": self.n_sequences_total}, 
-                                    os.path.join(args.work_dir, 'stats.pt'))
                     
                 if (self.train_step % args.eval_step == 0) and self.train_step > 0:
                     # Evaluate model
                     val_loss, val_acc = self.evaluate()
                     elapsed_total = time.time() - self.init_time
                     hours_elapsed = elapsed_total / 3600.0
-                    hours_total = self.init_hours + hours_elapsed
+                    self.hours_total = self.init_hours + hours_elapsed
                     lr = self.optimizer.param_groups[0]['lr']
                     self.logging('-' * 120)
                     log_str = '| Eval  {:3d} step {:>8d} | now: {} | {:>3.1f} h' \
                             '| valid loss {:7.4f} | ppl {:5.3f}'.format(
                         self.train_step // args.eval_step, self.train_step,
-                        time.strftime("%d-%m - %H:%M"), hours_total, 
+                        time.strftime("%d-%m - %H:%M"), self.hours_total, 
                         val_loss, math.exp(val_loss))
                     if args.regression:
                         log_str += " | l1_v: {:5.3f} | l1_a: {:5.3f}".format(
                             val_acc["l1_v"], val_acc["l1_a"])
 
-                    self.csv_writer.update({"epoch": self.epoch, "step": self.train_step, "hour": hours_total,
+                    self.csv_writer.update({"epoch": self.epoch, "step": self.train_step, "hour": self.hours_total,
                                                 "lr": lr, "trn_loss": np.nan, "val_loss": val_loss})
 
                     self.logging(log_str)
@@ -443,7 +443,20 @@ class Runner:
                 self.train_step += 1
             self.epoch += 1
             if self.train_step >= args.max_step:
-                break            
+                break
+
+    def save_model(self, save_dir):
+        os.makedirs(save_dir, exist_ok=True)
+        model_fp = os.path.join(save_dir, 'model.pt')
+        torch.save(self.model.state_dict(), model_fp)
+        optimizer_fp = os.path.join(save_dir, 'optimizer.pt')
+        torch.save(self.optimizer.state_dict(), optimizer_fp)
+        scaler_fp = os.path.join(save_dir, 'scaler.pt')
+        torch.save(self.scaler.state_dict(), scaler_fp)
+        torch.save({"step": self.train_step, "hour": self.hours_total, "epoch": self.epoch,
+                    "sample": self.n_sequences_total}, 
+                    os.path.join(save_dir, 'stats.pt'))
+
 
     def run(self):
 

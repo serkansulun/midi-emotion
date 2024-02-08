@@ -113,8 +113,8 @@ parser.add_argument("--always_use_discrete_condition", action="store_true",
                 help="Discrete tokens are used for every sequence")
 parser.add_argument("--regression_dir", type=str, default=None,
                     help="The path of folder with generations, to perform regression on")
-parser.add_argument("--attn_type", type=str, default="full",
-                    help="Attention type")
+parser.add_argument("--attn_type", type=str, default="causal-linear",
+                    help="Attention type for fast transformers")
 parser.add_argument("--fast_transformers", action="store_true",
                     help="Use the fast-transformers library")
 
@@ -128,11 +128,11 @@ if args.conditioning != "continuous_concat":
 
 assert not (args.exhaustive_eval and args.max_eval_step > 0)
 
-assert (args.attn_type == "full") or args.no_amp, "Linear attention doesn't work with AMP"
+# assert (args.attn_type == "full") or args.no_amp, "Linear attention doesn't work with AMP"
 
-if args.fast_transformers:
-    args.attn_type = 'linear'
-    print("Using fast transformers, switching to linear attention.")
+# if args.fast_transformers:
+#     args.attn_type = 'causal-linear'
+#     print("Using fast transformers, switching to linear attention.")
 
 if args.full_dataset:
     assert args.conditioning in ["discrete_token", "none"] and not args.regression, "LPD-full has NaN features"
@@ -162,6 +162,7 @@ if args.restart_dir:
 
 if args.debug:
     args.work_dir = os.path.join(args.work_dir, "DEBUG_" + time.strftime('%Y%m%d-%H%M%S'))
+    args.data_folder += '_debug'
 elif args.no_cuda:
     args.work_dir = os.path.join(args.work_dir, "CPU_" + time.strftime('%Y%m%d-%H%M%S'))
 else:
