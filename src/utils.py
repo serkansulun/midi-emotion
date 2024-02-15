@@ -4,6 +4,56 @@ import shutil
 import functools
 import os
 import nvsmi
+import numpy as np
+import matplotlib.pyplot as plt
+
+plt.ioff()
+
+def plot_performance(csv_path, start_step=1, title=None, save=True):
+
+    keys = [
+        "trn_loss", 
+        "val_loss", 
+        # "map_macro", 
+        ]
+    data = read_csv(csv_path, numeric=True)
+    x_lr_changes = []
+    vals = {key: {"x":[], "y":[]} for key in keys}
+    old_lr = data[0]["lr"]
+    for item in data:
+        step = item["step"]
+        if step >= start_step:
+            new_lr = item["lr"]
+            if new_lr < old_lr:
+                x_lr_changes.append(step)
+                old_lr = new_lr
+
+            for key in keys:
+                val = item[key]
+                if not np.isnan(val):
+                    vals[key]["x"].append(step)
+                    vals[key]["y"].append(val)
+    plt.figure(dpi=300)
+    for key, points in vals.items():
+        plt.plot(points["x"], points["y"], label=key)
+
+    label = f"LR changes (x{len(x_lr_changes)})"
+    for x in x_lr_changes:
+        plt.axvline(x=x, color="black", linestyle="--", linewidth=1, label=label)
+        label = None
+    plt.legend()
+    plt.grid()
+    plt.xlabel("Steps")
+    plt.ylabel("Loss")
+    if title == None:
+        title = csv_path.split("/")[-2]
+    plt.title(title)
+    png_path = csv_path.replace(".csv", ".pdf")
+    if save:
+        plt.savefig(png_path)
+    else:
+        plt.show()
+    plt.close()
 
 def memory():
     if torch.cuda.is_available():

@@ -1,12 +1,19 @@
 import pandas as pd
 import numpy as np
+from pathlib import Path
 
-def preprocess_features(feature_file, n_bins=None, min_n_instruments=3, 
+def preprocess_features(feature_file, data_folder, n_bins=None, min_n_instruments=3, 
         test_ratio=0.05, outlier_range=1.5, conditional=True,
         use_labeled_only=True):
 
     # Preprocess data
     data = pd.read_csv(feature_file)
+
+    # Get the intersection with existing data
+    data_folder = Path(data_folder)
+    existing_files = data_folder.glob("*.pt")
+    existing_files = [f.stem for f in existing_files]   # remove extension
+    data = data[data["file"].isin(existing_files)]
 
     data['note_density_per_instrument'] = data['note_density_per_track'] / data['n_instruments']
 

@@ -15,7 +15,7 @@ from data.loader import Loader
 from data.loader_exhaustive import LoaderExhaustive
 from data.loader_generations import LoaderGenerations
 from data.collate import filter_collate
-from utils import CsvWriter, create_exp_dir, accuracy, memory
+from utils import CsvWriter, create_exp_dir, accuracy, memory, plot_performance
 from config import args
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -58,7 +58,7 @@ class Runner:
 
         # Preprocessing
         train_feats, test_feats = preprocess_features(
-            "../data_files/lpd_5/features.csv",
+            "../data_files/lpd_5/features.csv", args.data_folder,
             n_bins=n_bins, conditional=conditional, 
             use_labeled_only=not args.full_dataset)
 
@@ -121,7 +121,9 @@ class Runner:
             torch.save(self.maps, os.path.join(args.work_dir, "mappings.pt"))
 
         self.csv_writer = CsvWriter(os.path.join(args.work_dir, "performance.csv"),
-            ["epoch", "step", "hour", "lr", "trn_loss", "val_loss", "val_l1_v", "val_l1_a"],
+            ["epoch", "step", "hour", "lr", "trn_loss", "val_loss", 
+            #  "val_l1_v", "val_l1_a"
+             ],
             in_path=self.csv_in, debug=args.debug)
 
         args.n_all_param = sum([p.nelement() for p in self.model.parameters()])
@@ -396,9 +398,11 @@ class Runner:
                     self.logging(log_str)
                     self.csv_writer.update({"epoch": self.epoch, "step": self.train_step, "hour": hours_total,
                                             "lr": lr, "trn_loss": cur_loss, "val_loss": np.nan,
-                                            "val_l1_v": np.nan, "val_l1_a": np.nan})
+                                            # "val_l1_v": np.nan, "val_l1_a": np.nan
+                                            })
                     
-                    if not args.debug:  # Save model
+                    if not args.debug:  # Save model and learning curves
+                        plot_performance(os.path.join(args.work_dir, "performance.csv"))
                         save_dir = os.path.join(args.work_dir, "latest_model")
                         self.save_model(save_dir)
                         if train_loss < best_train_loss:
@@ -437,6 +441,10 @@ class Runner:
                     # dev-performance based learning rate annealing
                     if args.scheduler == 'dev_perf':
                         self.scheduler.step(val_loss)
+
+                    if not args.debug:  # Save learning curves
+                        plot_performance(os.path.join(args.work_dir, "performance.csv"))
+                        x=0
 
                 if self.train_step >= args.max_step:
                     break

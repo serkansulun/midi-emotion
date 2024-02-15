@@ -9,7 +9,7 @@ parser.add_argument('--note', default=None, type=str,
 parser.add_argument("--conditioning", type=str, required=False, default="continuous_concat",
                     choices=["none", "discrete_token", "continuous_token",
                              "continuous_concat"], help='Conditioning type')
-parser.add_argument("--data_folder", type=str, default="../data_files/lpd_5/lpd_5_full_transposable")
+parser.add_argument("--data_folder", type=str, default="../data_files/lpd_5/lpd_5_full_transposable_debug")
 parser.add_argument('--full_dataset', action="store_true",
                     help='Use LPD-full dataset')
 parser.add_argument('--n_layer', type=int, default=20,
