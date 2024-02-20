@@ -26,7 +26,7 @@ class LoaderGenerations:
 
         data_paths = glob(os.path.join("../output", gen_folder, "*.pt"), recursive=True)
 
-        maps = torch.load("../datasets/lpd_5/w_emotion_transposable/maps.pt")
+        maps = torch.load('../data_files/lpd_5/maps.pt')
         n_vocab = len(maps["tuple2idx"])
 
         self.data = []

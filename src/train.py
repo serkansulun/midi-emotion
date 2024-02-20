@@ -164,7 +164,7 @@ class Runner:
         # Initialize model
         if args.restart_dir:
             # Load existing model
-            config = torch.load(os.path.join(args.restart_dir, "model_config.pt"))
+            config = torch.load(os.path.join(args.restart_dir, "../model_config.pt"))
             self.model, config = build_model(None, load_config_dict=config)
             self.model = self.model.to(self.device)
 

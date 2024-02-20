@@ -32,8 +32,8 @@ class LoaderExhaustive:
 
         self.data = data
 
-        maps_file = os.path.join(data_folder, "maps.pt")
-        self.maps = torch.load(maps_file)
+        # maps_file = os.path.join(data_folder, "maps.pt")
+        self.maps = torch.load('../data_files/lpd_5/maps.pt')
 
         self.pad_token = '<PAD>' if pad else None
         self.start_token = '<START>' if use_start_token else None

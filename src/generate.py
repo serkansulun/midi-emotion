@@ -231,8 +231,11 @@ def generate(model, maps, device, out_dir, conditioning, short_filename=False,
                 out_path_inds = "inds_" + out_file_path.replace(".mid", ".pt")
                 out_path_inds = os.path.join(out_dir, out_path_inds)
 
+                tensor_output = {"inds": gen_song_tensor[:, i], "condition": continuous_conditions[i, :]}
+
                 if not debug:
                     mid.write(out_path_mid)
+                    torch.save(tensor_output, out_path_inds)
                     if verbose:
                         print(f"Saved to {out_path_mid}")
             else:
