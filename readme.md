@@ -15,8 +15,7 @@ To create the Lakh-Spotify dataset:
 
 - Download the datasets:
 
-Lakh pianoroll 5 full dataset
-https://drive.google.com/uc?id=1tZKMhYazSWapFTUt7H6abHSo-QKH9ATC
+[Lakh pianoroll 5 full dataset](https://ucsdcloud-my.sharepoint.com/personal/h3dong_ucsd_edu/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fh3dong%5Fucsd%5Fedu%2FDocuments%2Fdata%2Flpd%2Flpd%5F5%2Flpd%5F5%5Ffull%2Etar%2Egz&parent=%2Fpersonal%2Fh3dong%5Fucsd%5Fedu%2FDocuments%2Fdata%2Flpd%2Flpd%5F5&ga=1)
 
 MSD summary file
 http://labrosa.ee.columbia.edu/millionsong/sites/default/files/AdditionalFiles/msd_summary_file.h5
